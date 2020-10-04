@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <meta name="author" content="Benjamin Anderson" />
+  <meta name="dcterms.date" content="2020-10-06" />
+  <title>Exploratory Data Analysis: NYPD Discipline Records</title>
+  <style>
+    * {font-family: Avenir;}
+    code {font-family: Courier New, monospace;}
+    body {padding: 20px 5%;}
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    img{max-width: 65%; text-align: center; display: block; margin: auto;
+      max-height: 450px;}
+    header h1{ text-align: center; margin: 5px;}
+    header p { text-align: center; margin: 5px; }
+  </style>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Exploratory Data Analysis:<br />
+NYPD Discipline Records</h1>
+<p class="author">Benjamin Anderson</p>
+<p class="date">October 6, 2020</p>
+</header>
+<img src="car.png" alt="image" /></p>
+<h1 class="unnumbered" id="introduction">Introduction</h1>
+<p>This July, ProPublica, an investigative journalism outlet, publicly released over <a href="https://projects.propublica.org/nypd-ccrb/">30,000 records of complaints</a> lodged against New York City police, which had been submitted to the Civilian Complaint Review Board. The dataset contains only complaints that were investigated, meaning that every allegation in the dataset was backed up by a sworn statement from a civilian. Each complaint record includes information such as the officer’s name and ID, the type of alleged misconduct, the demographics of the officer and complainant, and whether the complaint was substantiated by the CCRB’s investigation.</p>
+<p>This dataset is very rich—I’m sure I could write three reports on it—but for this exploratory data analysis, I decided to investigate the following questions:</p>
+<ol>
+<li><p>How are complaints distributed among police officers and precincts? Are there a few bad individuals or a few bad precincts with tons of complaints, or are there many officers and precincts with a substantial number of complaints against them?</p></li>
+<li><p>How often are complaints against officers substantiated, and with what frequency are various disciplinary actions recommended?</p></li>
+<li><p>Are people belonging to minority racial groups more likely to report police misconduct? How does the complainant’s race correlate to the likelihood of the CCRB recommending discipline?</p></li>
+</ol>
+<h1 class="unnumbered" id="data-preparation">Data Preparation</h1>
+<p>I prepared the data for visualization using the <code>dplyr</code> package in R. The main transformations (see Appendix A for code) consisted of selecting the relevant variables, and transforming nominal fields with dozens of possible values into simpler nominal fields. I also stitched month and year together to create date fields, making it easier to plot time series. Finally, I split the column describing the CCRB’s verdict into two columns: one for the judgment of whether the complaint was substantiated, and another describing the discipline recommendations, if any. After data preparation, I was left with the following fields:</p>
+<ul>
+<li><p><strong>Officer ID</strong> (Nominal)</p></li>
+<li><p><strong>Precinct</strong> (Nominal)</p></li>
+<li><p><strong>Full Name</strong> (Nominal)</p></li>
+<li><p><strong>Complaint ID</strong> (Nominal)</p></li>
+<li><p><strong>Date Received</strong> (Date)</p></li>
+<li><p><strong>Date Closed</strong> (Date)</p></li>
+<li><p><strong>Command Now</strong> (Nominal) — Officer’s command assignment at the time of the data release</p></li>
+<li><p><strong>Command Then</strong> (Nominal) — Officer’s command assignment at the time of the incident</p></li>
+<li><p><strong>Rank Now</strong> (Nominal) — Officer’s rank at the time of the data release</p></li>
+<li><p><strong>Rank Then</strong> (Nominal) — Officer’s rank at the time of the incident</p></li>
+<li><p><strong>Police Ethnicity</strong> (Nominal)</p></li>
+<li><p><strong>Police Age</strong> (Ordinal)</p></li>
+<li><p><strong>Police Gender</strong> (Nominal)</p></li>
+<li><p><strong>Complainant Ethnicity</strong> (Nominal)</p></li>
+<li><p><strong>Complainant Age</strong> (Ordinal)</p></li>
+<li><p><strong>Complainant Gender</strong> (Nominal)</p></li>
+<li><p><strong>Allegation Type</strong> (Nominal)</p></li>
+<li><p><strong>Allegation</strong> (Nominal) — More detailed description of allegation</p></li>
+<li><p><strong>Contact Reason</strong> (Nominal) — Reason for police–civilian encounter</p></li>
+<li><p><strong>Outcome Category</strong> (Nominal) — Result of the encounter (e.g. arrest)</p></li>
+<li><p><strong>Outcome</strong> (Nominal) — More detailed description of the outcome</p></li>
+<li><p><strong>Board Conclusion</strong> (Nominal) — E.g. substantiated, unsubstantiated</p></li>
+<li><p><strong>Recommended Discipline</strong> (Nominal)</p></li>
+</ul>
+<h1 class="unnumbered" id="distribution-of-complaints-among-officers">Distribution of Complaints Among Officers</h1>
+<p>In conversations about police abuse, a common refrain is that “it’s just a few bad apples.” I wanted to find out if this was true for the NYPD–are a few “bad cops” driving use-of-force complaints, or is the problem more endemic? There are so many officers in the dataset (around 4000) that simply showing the count of complaints for each officer produces a <em>long</em> graphic that’s completely illegible. The following visualization (created in R) is much more informative—it shows the count of <em>officers</em> with a given number of <em>complaints</em>.</p>
+<p><img src="officers_by_num_complaints.png" alt="image" /></p>
+<p>This visualization shows a distribution with a long tail—half of all police officers with complaints against them have 6 or fewer, while there are some real outliers on the high end, including two officers with <em>75 complaints</em>. However, this still leaves a substantial number of officers (around 2000) with 6 or more complaints against them since 1985. For context, there are about 36,000 police officers in the NYPD, according to its website.</p>
+<h1 class="unnumbered" id="distribution-of-complaints-among-precincts">Distribution of Complaints Among Precincts</h1>
+<p>There are far fewer precincts than officers, so it is not prohibitive to visualize the number of complaints for each individual precinct. (This only includes precincts against which there is at least one complaint.)</p>
+<p><img src="comp_by_precinct.png" alt="image" /></p>
+<p>The main feature that’s eye-catching here is the single bar that’s nearly double the size of any other—that’s the 75th Precinct, which, according to an article from <em><a href="https://theintercept.com/2020/08/23/nypd-75th-precinct-police-misconduct/">The Intercept</a></em>, is also “the most sued precinct of New York City”. It’s also one of the poorest. I wondered if this was a general trend, so to answer this follow-up question, I created a map (using R) to display complaints by precinct. (The 75th Precinct is the lightest-blue precinct.)</p>
+<p style="text-align: center"><strong>Complaints by Precinct (Map)</strong> <img src="complaints_map.png" alt="image" /></p>
+<p>On its own, this isn’t that informative, but compare it to the following graphic mapping 2018 median income in New York City. (I did not make this map, it’s from the <a href="https://data.cccnewyork.org/data/map/66/median-incomes#66/39/3/107/40/a/a">NYC Citizens’ Committee for Children</a>.) You’ll notice that areas with more complaints tend to be poorer—East Brooklyn, where the 75th Precinct is, and Harlem (near the top of the map).</p>
+<p style="text-align: center"><strong>Median Incomes in NYC</strong><br />
+ <br />
+<img src="ccc.png" alt="image" /></p>
+<h1 class="unnumbered" id="conclusions-of-the-ccrb">Conclusions of the CCRB</h1>
+<p>My second main line of investigation concerns how often the CCRB was able to substantiate complaints, and the sort of discipline it recommended when complaints were substantiated. This pie chart provides a good first glimpse, showing that only a quarter of allegations are ultimately substantiated. The rest are either unsubstantiated (the CCRB cannot find sufficient evidence to back them up), or result in exoneration (the conduct in question was found to be legal).</p>
+<p><img src="ccrb-conclusions-pie.png" alt="image" /></p>
+<p>We often discuss racial bias in policing—and I’ll be exploring questions related to that in the following section—but I was also curious whether the race or ethnicity of the offending <em>officer</em> had any correlation to the likelihood of the CCRB substantiating a complaint against them. (One hypothesis: if police departments are racist, one might expect police to be more likely to “close ranks” around white cops, making it harder to substantiate complaints against them.)</p>
+<p><img src="conclusion-by-ethnicity.png" alt="image" /></p>
+<p>This visualization breaks down police by race/ethnicity, and for each group, shows the percent of allegations that resulted in exoneration, substantiation, or failure to substantiate. As it turns out, there don’t seem to be substantial differences between white, Hispanic, and Black officers. Asian American officers seem to have complaints against them substantiated at a slightly higher rate than other groups. Native American officers appear to have complaints against then substantiated less often, but this may just be due to a very small sample (there are only 32 complaints against Native American officers in the dataset).<br />
+This dataset also provides more detail beyond merely whether the CCRB found evidence to back up a complaint—it also includes the board’s discipline recommendation, if any. (Note that the board’s recommendations are not binding; the NYPD can and often does ignore recommendations to punish police officers.) Below, you can see the breakdown of recommended disciplinary action for all complaints.</p>
+<p><img src="recs-incl-none.png" alt="image" /></p>
+<p>Given that around 1/4 of cases are substantiated, it shouldn’t be surprising that there’s no recommended discipline for about 75% of cases. The obvious follow up is to consider how often various punishments are recommended <em>given that</em> a complaint is substantiated. That breakdown is shown below.</p>
+<p><img src="rec-discipline-subst.png" alt="image" /></p>
+<p>It is noteworthy that charges are recommended in nearly half of all cases where a complaint is substantiated. It would be interesting to compare these recommendations with the actual rates of discipline (not part of this dataset)—I would hypothesize that there would be stark differences between recommendations and reality.</p>
+<h1 class="unnumbered" id="complaints-by-complainant-raceethnicity">Complaints by Complainant Race/Ethnicity</h1>
+<p>My final guiding question concerns how the ethnicity of the complainant relates to complaints of police misconduct. The most straightforward first gloss on this question is to show frequency of complaints by complainant race/ethnicity.</p>
+<p><img src="compl-by-ethn.png" alt="image" /></p>
+<p>This reveals a couple of things—first, Black and Hispanic complainants make up the bulk of complaints. The proportion of complaints by Black people is particularly striking when compared to the demographics of New York City, which is only around 25% Black, according to the <a href="https://www.census.gov/quickfacts/newyorkcitynewyork">Census</a>.</p>
+<p>Second, it reveals a possible problem with missing data–the “NA and Unknown” column is the third largest! To investigate further, I decided to visualize complaints by race/ethnicity <em>over time</em>.</p>
+<p><img src="cmp-time.png" alt="image" /></p>
+<p>This immediately reveals some problems with the data—most notably, that data on race was not collected at all prior to 1998. It also suggests that data for 2019 and 2020 is incomplete or missing, since complaints disappear or drop sharply for all groups. Finally, it’s interesting to see how sharply complaints rose starting in 2000. Since this dataset only includes complaints that the CCRB investigated, I wonder if this is due to more capacity to investigate rather than a sharp increase in abuse by police officers. From a quick skim of the <a href="https://en.wikipedia.org/wiki/Civilian_Complaint_Review_Board">Wikipedia article</a> about the CCRB, I found that it did not have proper funding until 1997—which could help explain the trend.<br />
+After seeing the disproportionate rates of complaints, I was curious to explore further how the complainant’s ethnicity mediates interactions with the police. First of all, I hypothesized that there may be differences in the “outcome” of police-civilian interactions depending on ethnicity. To see if the complaints data bears this out, I broke down complainants by ethnicity, and showed the distribution of the possible outcomes (no action, arrest, summons, or juvenile report).</p>
+<p><img src="outcome-by-ethn.png" alt="image" /></p>
+<p>Indeed, there are some disparities evident here. Note the significantly lower arrest rate for white complainants relative to Black and Hispanic ones. Finally, I break down the <em>conclusion</em> of the CCRB by the complainant’s ethnicity, to determine if there’s a relationship between who is complaining about police misconduct, and whether anything is done about it.</p>
+<p><img src="concl-comp-ethn.png" alt="image" /></p>
+<p>The main columns that stand out are NA/Unknown, and the American Indian group, which I do not think we cannot draw conclusions from because the sample is so small.</p>
+</body>
+</html>
