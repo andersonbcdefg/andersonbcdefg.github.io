@@ -1,0 +1,94 @@
+
+<!DOCTYPE html>
+<html lang = "en">
+   <head>
+      <script src="https://d3js.org/d3.v6.min.js"></script>
+   </head>
+   <style>
+   	#animation-container {
+   		background-color: WhiteSmoke;
+   		height: 100vh;
+   		width: 100vw;
+   		position: fixed;
+   		top: 0;
+   		left: 0;
+   		z-index: -2;
+   		display: flex;
+   		flex-wrap: wrap;
+   		justify-content: center;
+   		align-items: space-around;
+   	}
+   	.square {
+   		width: calc(9vw - 2px);
+   		height: calc(12vh - 2px);
+   		display: inline-block;
+   		margin: 1px;
+   		background-color: #cae7e4;
+   		box-sizing: border-box;
+   		border: 0px solid grey;
+   		border-radius: 50%;
+
+   	}
+
+   	.highlighted {
+   		background-color: #f8cd85 !important;
+   		box-shadow: 1px 1px 4px grey;
+   	}
+
+   	#cover {
+   		width: 100vw;
+   		height: 100vh;
+   		background-color: rgba(220, 220, 220, 0.675);
+   		position: fixed;
+   		top: 0;
+   		left: 0;
+   		z-index: -1;
+   	}
+
+   </style>
+
+   <body>
+   	<div id="animation-container">
+	</div>
+	<div id="cover"></div>
+	<script>
+		
+		const addSquares = () => {
+			let s = [];
+			const c = d3.select("#animation-container")
+			for (let i = 0; i < 88; i++) {
+				s.push(c.append("div")
+					.attr("class", "square"))
+			}
+			return s;
+		}
+		
+		const squares = addSquares();
+
+		const sleep = (ms) => {
+  			return new Promise(resolve => setTimeout(resolve, ms))
+		}
+		
+		const animate = async (squares) => {
+			const c = d3.select("#animation-container")
+	        while(true) {
+	        	for (i = 2; i < 26; i++) {
+	        		let c = i - 1;
+	        		while (c < 88) {
+	        			if (squares[c].node().classList.contains("highlighted")) {
+	        				squares[c].node().classList.remove("highlighted");
+	        			} else {
+	        				squares[c].node().classList.add("highlighted");
+	        			}
+	        			await sleep(350);
+	        			c += i;
+	        		}
+	        	}
+	        	
+	        }
+		}
+		animate(squares);
+        
+	</script>
+   </body>
+</html>
